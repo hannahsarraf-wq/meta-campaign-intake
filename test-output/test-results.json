@@ -1,0 +1,37 @@
+[
+  {
+    "goal": "IMPRESSIONS",
+    "status": "FAIL",
+    "error": "Cannot read properties of undefined (reading '0')"
+  },
+  {
+    "goal": "REACH",
+    "status": "FAIL",
+    "error": "Cannot read properties of undefined (reading '0')"
+  },
+  {
+    "goal": "LINK_CLICKS",
+    "status": "FAIL",
+    "error": "Cannot read properties of undefined (reading '0')"
+  },
+  {
+    "goal": "LANDING_PAGE_VIEWS",
+    "status": "FAIL",
+    "error": "Cannot read properties of undefined (reading '0')"
+  },
+  {
+    "goal": "THRUPLAY",
+    "status": "FAIL",
+    "error": "Cannot read properties of undefined (reading '0')"
+  },
+  {
+    "goal": "LEAD_GENERATION",
+    "status": "FAIL",
+    "error": "Cannot read properties of undefined (reading '0')"
+  },
+  {
+    "goal": "OFFSITE_CONVERSIONS",
+    "status": "FAIL",
+    "error": "Cannot read properties of undefined (reading '0')"
+  }
+]

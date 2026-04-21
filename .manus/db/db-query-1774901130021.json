@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `campaigns` ADD `budgetLevel` varchar(64) DEFAULT 'ad_set' NOT NULL; ALTER TABLE `campaigns` ADD `isDraft` int DEFAULT 0 NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aXiGZWUSXePVSBa.root --database E2okp9qk6dF6zumhPnT2xq --execute ALTER TABLE `campaigns` ADD `budgetLevel` varchar(64) DEFAULT 'ad_set' NOT NULL; ALTER TABLE `campaigns` ADD `isDraft` int DEFAULT 0 NOT NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1306
+}

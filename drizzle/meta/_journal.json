@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1774890683805,
+      "tag": "0000_faulty_the_santerians",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1774891088175,
+      "tag": "0001_curious_lady_vermin",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1774900312749,
+      "tag": "0002_loose_molecule_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1774901120928,
+      "tag": "0003_chilly_ted_forrester",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1774991599282,
+      "tag": "0004_certain_albert_cleary",
+      "breakpoints": true
+    }
+  ]
+}

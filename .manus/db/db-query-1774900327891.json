@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `adSets` ADD `country` varchar(255) DEFAULT 'United States' NOT NULL;\nALTER TABLE `adSets` ADD `geoType` varchar(64) DEFAULT 'city' NOT NULL;\nALTER TABLE `adSets` ADD `geoLocation` text;\nALTER TABLE `adSets` ADD `ageRange` varchar(64);\nALTER TABLE `adSets` ADD `gender` varchar(64) DEFAULT 'all';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aXiGZWUSXePVSBa.root --database E2okp9qk6dF6zumhPnT2xq --execute ALTER TABLE `adSets` ADD `country` varchar(255) DEFAULT 'United States' NOT NULL;\nALTER TABLE `adSets` ADD `geoType` varchar(64) DEFAULT 'city' NOT NULL;\nALTER TABLE `adSets` ADD `geoLocation` text;\nALTER TABLE `adSets` ADD `ageRange` varchar(64);\nALTER TABLE `adSets` ADD `gender` varchar(64) DEFAULT 'all';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1013
+}
