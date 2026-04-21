@@ -15,15 +15,24 @@ import {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Lax CORS for testing — allow all origins with credentials
-app.use("*", cors({
-  origin: "*",
-  allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  allowHeaders: ["Content-Type", "Authorization"],
-  exposeHeaders: ["Set-Cookie"],
-  credentials: false, // must be false when origin is "*"
-  maxAge: 86400,
-}));
+// Reflect the request origin back if it matches an allowed origin, enabling credentialed cross-origin requests.
+// Wildcard origin cannot be used with credentials:true (browser will block it).
+app.use("*", async (c, next) => {
+  const allowed = [
+    c.env.FRONTEND_URL,
+    "http://localhost:5173",
+    "http://localhost:3000",
+  ].filter(Boolean);
+  const corsMiddleware = cors({
+    origin: (origin) => (allowed.includes(origin) ? origin : allowed[0]),
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    exposeHeaders: ["Set-Cookie"],
+    credentials: true,
+    maxAge: 86400,
+  });
+  return corsMiddleware(c, next);
+});
 
 // ─── OAuth callback ────────────────────────────────────────────────────────
 app.get("/api/oauth/callback", async (c) => {

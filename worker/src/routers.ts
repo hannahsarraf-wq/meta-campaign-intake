@@ -54,7 +54,7 @@ export const appRouter = router({
   }),
 
   campaigns: router({
-    validateAdAccount: protectedProcedure
+    validateAdAccount: publicProcedure
       .input(z.object({ adAccountId: z.string().min(1) }))
       .query(({ ctx, input }) => validateAdAccount(ctx.env.META_ACCESS_TOKEN, input.adAccountId)),
 
