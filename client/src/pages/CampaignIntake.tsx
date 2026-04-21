@@ -109,8 +109,7 @@ interface FormData {
 }
 
 export default function CampaignIntake() {
-  // Auth is handled at the server level via protectedProcedure
-  // const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth({ redirectOnUnauthenticated: true });
   const createCampaignMutation = trpc.campaigns.create.useMutation();
   const generateExcelMutation = trpc.campaigns.generateExcel.useMutation();
   const saveDraftMutation = trpc.campaigns.saveDraft.useMutation();
@@ -523,10 +522,11 @@ export default function CampaignIntake() {
     }
   };
 
-  // Show form while loading auth - auth is handled by the server
-  // if (!user) {
-  //   return <div>Loading...</div>;
-  // }
+  if (authLoading) {
+    return <div className="min-h-screen bg-slate-50 flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
