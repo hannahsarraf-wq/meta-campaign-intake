@@ -7,12 +7,14 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Drafts from "./pages/Drafts";
 import CampaignIntake from "./pages/CampaignIntake";
+import Login from "./pages/Login";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
       <Route path="/intake" component={CampaignIntake} />
       <Route path="/drafts" component={Drafts} />
       <Route path="/404" component={NotFound} />

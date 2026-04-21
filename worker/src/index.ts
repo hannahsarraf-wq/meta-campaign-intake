@@ -34,6 +34,28 @@ app.use("*", async (c, next) => {
   return corsMiddleware(c, next);
 });
 
+// ─── Password login ────────────────────────────────────────────────────────
+app.post("/api/auth/login", async (c) => {
+  let body: { password?: string };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Invalid request body" }, 400);
+  }
+
+  if (!body.password || body.password !== c.env.APP_PASSWORD) {
+    return c.json({ error: "Invalid password" }, 401);
+  }
+
+  const sessionToken = await createSessionToken(c.env.JWT_SECRET, c.env.VITE_APP_ID, "password-user", "User");
+  const cookie = buildSessionCookie(COOKIE_NAME, sessionToken, ONE_YEAR_MS / 1000);
+
+  return new Response(JSON.stringify({ success: true }), {
+    status: 200,
+    headers: { "Set-Cookie": cookie, "Content-Type": "application/json" },
+  });
+});
+
 // ─── OAuth callback ────────────────────────────────────────────────────────
 app.get("/api/oauth/callback", async (c) => {
   const code = c.req.query("code");

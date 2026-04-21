@@ -4,7 +4,7 @@ import superjson from "superjson";
 import type { Env } from "./env";
 import type { User } from "./schema";
 import { getDb } from "./db";
-import { parseCookies, verifySession, getUserInfoWithJwt } from "./sdk";
+import { parseCookies, verifySession } from "./sdk";
 import { users } from "./schema";
 import { eq } from "drizzle-orm";
 
@@ -31,17 +31,14 @@ export async function createContext(
       let found = await db.select().from(users).where(eq(users.openId, session.openId)).limit(1);
 
       if (!found.length) {
-        const userInfo = await getUserInfoWithJwt(env.OAUTH_SERVER_URL, env.VITE_APP_ID, sessionCookie ?? "");
-        if (userInfo?.openId) {
-          await db.insert(users).values({
-            openId: userInfo.openId,
-            name: userInfo.name || null,
-            email: userInfo.email || null,
-            loginMethod: userInfo.loginMethod || userInfo.platform || null,
-            role: userInfo.openId === env.OWNER_OPEN_ID ? "admin" : "user",
-          }).onConflictDoNothing();
-          found = await db.select().from(users).where(eq(users.openId, userInfo.openId)).limit(1);
-        }
+        await db.insert(users).values({
+          openId: session.openId,
+          name: session.name || "User",
+          email: null,
+          loginMethod: "password",
+          role: "user",
+        }).onConflictDoNothing();
+        found = await db.select().from(users).where(eq(users.openId, session.openId)).limit(1);
       }
 
       user = found[0] ?? null;
