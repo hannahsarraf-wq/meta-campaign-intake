@@ -1,0 +1,25 @@
+{
+  "name": "meta-campaign-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "migrate": "wrangler d1 execute meta-campaign-db --file=schema.sql",
+    "migrate:remote": "wrangler d1 execute meta-campaign-db --remote --file=schema.sql"
+  },
+  "dependencies": {
+    "@trpc/server": "^11.6.0",
+    "drizzle-orm": "^0.44.5",
+    "hono": "^4.7.11",
+    "jose": "6.1.0",
+    "superjson": "^1.13.3",
+    "xlsx": "^0.18.5",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250620.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.84.1"
+  }
+}
