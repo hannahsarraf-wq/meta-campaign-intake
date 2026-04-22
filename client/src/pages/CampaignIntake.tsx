@@ -259,7 +259,7 @@ export default function CampaignIntake() {
         toast.error("All Ad Set Names are required");
         return false;
       }
-      if (!adSet.adSetBidStrategy) {
+      if (formData.budgetLevel === "ad_set" && !adSet.adSetBidStrategy) {
         toast.error("All Ad Set Bid Strategies are required");
         return false;
       }
@@ -279,7 +279,7 @@ export default function CampaignIntake() {
       }
 
       // Budget validation
-      if (!adSet.adSetDailyBudget && !adSet.adSetLifetimeBudget) {
+      if (formData.budgetLevel === "ad_set" && !adSet.adSetDailyBudget && !adSet.adSetLifetimeBudget) {
         toast.error("Each Ad Set must have either a Daily or Lifetime Budget");
         return false;
       }
