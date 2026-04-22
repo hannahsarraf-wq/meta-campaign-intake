@@ -21,6 +21,15 @@ function formatGeo(geoType: string, geoLocation: string, country?: string | null
   return `${geoLocation}, ${country || "United States"}`;
 }
 
+
+function formatDateForExcel(dtLocal: string | null | undefined): string {
+  if (!dtLocal) return "";
+  const [datePart, timePart = ""] = dtLocal.split("T");
+  const [year, month, day] = datePart.split("-");
+  if (!year || !month || !day) return dtLocal;
+  return `${month}/${day}/${year.slice(2)} ${timePart.substring(0, 5)}`;
+}
+
 export function generateExcelFile(campaignData: Campaign & { adSets: AdSet[] }): Uint8Array {
   const bytes = Uint8Array.from(atob(TEMPLATE_B64), c => c.charCodeAt(0));
   const workbook = XLSX.read(bytes, { type: "array" });
@@ -47,8 +56,8 @@ export function generateExcelFile(campaignData: Campaign & { adSets: AdSet[] }):
     setCell(COL.adSetId, "");
     setCell(COL.adSetRunStatus, adSet.adSetRunStatus);
     setCell(COL.adSetName, adSet.adSetName);
-    setCell(COL.adSetTimeStart, adSet.adSetTimeStart);
-    setCell(COL.adSetTimeStop, adSet.adSetTimeStop);
+    setCell(COL.adSetTimeStart, formatDateForExcel(adSet.adSetTimeStart));
+    setCell(COL.adSetTimeStop, formatDateForExcel(adSet.adSetTimeStop));
     if (adSet.adSetDailyBudget) setCell(COL.adSetDailyBudget, adSet.adSetDailyBudget / 100);
     if (adSet.adSetLifetimeBudget) setCell(COL.adSetLifetimeBudget, adSet.adSetLifetimeBudget / 100);
     setCell(COL.adSetBidStrategy, adSet.adSetBidStrategy);

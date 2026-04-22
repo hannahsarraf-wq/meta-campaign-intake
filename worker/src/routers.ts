@@ -183,7 +183,11 @@ export const appRouter = router({
 
     listDrafts: protectedProcedure.query(async ({ ctx }) => {
       const db = getDb(ctx.env);
-      return db.select().from(campaigns).where(and(eq(campaigns.userId, ctx.user.id), eq(campaigns.isDraft, 1)));
+      const drafts = await db.select().from(campaigns).where(and(eq(campaigns.userId, ctx.user.id), eq(campaigns.isDraft, 1)));
+      return Promise.all(drafts.map(async (draft) => {
+        const sets = await db.select({ id: adSets.id }).from(adSets).where(eq(adSets.campaignId, draft.id));
+        return { ...draft, adSetCount: sets.length };
+      }));
     }),
 
     deleteDraft: protectedProcedure

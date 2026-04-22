@@ -343,6 +343,42 @@ export default function CampaignIntake() {
     };
   };
 
+  const convertToDraftData = () => {
+    return {
+      campaignName: formData.campaignName,
+      campaignStatus: formData.campaignStatus,
+      specialAdCategories: formData.specialAdCategories === "None" ? undefined : formData.specialAdCategories,
+      specialAdCategoryCountry: formData.specialAdCategoryCountry || undefined,
+      campaignObjective: formData.campaignObjective || undefined,
+      buyingType: formData.buyingType || undefined,
+      campaignSpendLimit: formData.budgetLevel === "campaign" && formData.campaignSpendLimit ? Math.round(parseFloat(formData.campaignSpendLimit) * 100) : undefined,
+      campaignDailyBudget: formData.budgetLevel === "campaign" && formData.campaignDailyBudget ? Math.round(parseFloat(formData.campaignDailyBudget) * 100) : undefined,
+      campaignLifetimeBudget: formData.budgetLevel === "campaign" && formData.campaignLifetimeBudget ? Math.round(parseFloat(formData.campaignLifetimeBudget) * 100) : undefined,
+      campaignBidStrategy: formData.campaignBidStrategy || undefined,
+      budgetLevel: formData.budgetLevel,
+      adSets: formData.adSets
+        .filter((adSet) => adSet.adSetName.trim())
+        .map((adSet) => ({
+          adSetName: adSet.adSetName,
+          adSetRunStatus: adSet.adSetRunStatus,
+          adSetTimeStart: adSet.adSetTimeStart || undefined,
+          adSetTimeStop: adSet.adSetTimeStop || undefined,
+          adSetDailyBudget: adSet.adSetDailyBudget ? Math.round(parseFloat(adSet.adSetDailyBudget) * 100) : undefined,
+          adSetLifetimeBudget: adSet.adSetLifetimeBudget ? Math.round(parseFloat(adSet.adSetLifetimeBudget) * 100) : undefined,
+          adSetBidStrategy: adSet.adSetBidStrategy || undefined,
+          minimumROAS: adSet.minimumROAS ? Math.round(parseFloat(adSet.minimumROAS) * 100) : undefined,
+          link: adSet.link && isValidUrl(adSet.link) ? adSet.link : undefined,
+          optimizationGoal: adSet.optimizationGoal || undefined,
+          billingEvent: adSet.billingEvent || undefined,
+          country: adSet.country || "United States",
+          geoType: adSet.geoType || "city",
+          geoLocation: adSet.geoLocation || undefined,
+          ageRange: adSet.ageRange || undefined,
+          gender: adSet.gender || "all",
+        })),
+    };
+  };
+
   const handleSaveDraft = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -354,8 +390,8 @@ export default function CampaignIntake() {
     setIsSubmitting(true);
 
     try {
-      const dbData = convertToDatabase();
-      await saveDraftMutation.mutateAsync(dbData);
+      const draftData = convertToDraftData();
+      await saveDraftMutation.mutateAsync(draftData);
       toast.success("Campaign saved as draft");
     } catch (error) {
       toast.error("Failed to save draft");
