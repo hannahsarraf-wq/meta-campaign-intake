@@ -43,6 +43,12 @@ function mapSpecialCategory(c: string): string[] {
   return [m[c] || c.toUpperCase()];
 }
 
+function toEstUnixTimestamp(dateStr: string): number | undefined {
+  const withEst = dateStr.length === 16 ? `${dateStr}:00-05:00` : `${dateStr}-05:00`;
+  const d = new Date(withEst);
+  return isNaN(d.getTime()) ? undefined : Math.floor(d.getTime() / 1000);
+}
+
 function getCountryCode(country: string): string {
   if (country.length === 2) return country.toUpperCase();
   const m: Record<string, string> = {
@@ -139,12 +145,25 @@ export async function pushCampaignToMeta(
     if (campaign.budgetLevel === "ad_set") {
       if (adSet.adSetDailyBudget) adSetParams.daily_budget = adSet.adSetDailyBudget;
       if (adSet.adSetLifetimeBudget) adSetParams.lifetime_budget = adSet.adSetLifetimeBudget;
-      if (adSet.adSetBidStrategy) adSetParams.bid_strategy = mapBidStrategy(adSet.adSetBidStrategy);
+      adSetParams.bid_strategy = adSet.adSetBidStrategy
+        ? mapBidStrategy(adSet.adSetBidStrategy)
+        : "LOWEST_COST_WITHOUT_CAP";
+    } else {
+      // CBO: Meta API requires bid_strategy at the ad set level even when the
+      // campaign owns the budget.
+      adSetParams.bid_strategy = "LOWEST_COST_WITHOUT_CAP";
     }
     if (!adSetParams.daily_budget && !adSetParams.lifetime_budget) adSetParams.daily_budget = 100;
     if (adSet.minimumROAS) adSetParams.roas_average_floor = adSet.minimumROAS;
-    if (adSet.adSetTimeStart) adSetParams.start_time = adSet.adSetTimeStart;
-    if (adSet.adSetTimeStop) adSetParams.end_time = adSet.adSetTimeStop;
+    // Treat datetime-local strings as EST (UTC-5) to match the ad account timezone
+    if (adSet.adSetTimeStart) {
+      const ts = toEstUnixTimestamp(adSet.adSetTimeStart);
+      if (ts) adSetParams.start_time = ts;
+    }
+    if (adSet.adSetTimeStop) {
+      const ts = toEstUnixTimestamp(adSet.adSetTimeStop);
+      if (ts) adSetParams.end_time = ts;
+    }
     if (adSet.link) adSetParams.promoted_object = { url: adSet.link };
 
     const { id } = await metaPost(accessToken, `/${accountId}/adsets`, adSetParams);

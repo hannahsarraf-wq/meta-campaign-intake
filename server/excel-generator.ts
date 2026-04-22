@@ -10,6 +10,17 @@ const __filename_local = typeof __filename !== 'undefined' ? __filename : fileUR
 const __dirname_local = path.dirname(__filename_local);
 
 /**
+ * Format a datetime-local string for Excel without a timezone offset.
+ * Meta reads the value in the ad account's timezone (EST), so we pass it
+ * through as-is rather than converting to UTC (which would shift the time).
+ */
+function formatDateTimeForExcel(dateStr: string | null | undefined): string {
+  if (!dateStr) return "";
+  const base = dateStr.slice(0, 16); // "YYYY-MM-DDTHH:MM"
+  return base.length === 16 ? `${base}:00` : "";
+}
+
+/**
  * Format geo location with country prefix based on geo type
  */
 function formatGeoWithCountry(geoType: string, geoLocation: string, country?: string | null): string {
@@ -115,8 +126,8 @@ export async function generateExcelFile(campaignData: Campaign & { adSets: AdSet
     row.getCell(EXCEL_COLUMN_MAP.adSetId + 1).value = ""; // Leave blank for new ad sets
     row.getCell(EXCEL_COLUMN_MAP.adSetRunStatus + 1).value = adSet.adSetRunStatus;
     row.getCell(EXCEL_COLUMN_MAP.adSetName + 1).value = adSet.adSetName;
-    row.getCell(EXCEL_COLUMN_MAP.adSetTimeStart + 1).value = adSet.adSetTimeStart || "";
-    row.getCell(EXCEL_COLUMN_MAP.adSetTimeStop + 1).value = adSet.adSetTimeStop || "";
+    row.getCell(EXCEL_COLUMN_MAP.adSetTimeStart + 1).value = formatDateTimeForExcel(adSet.adSetTimeStart);
+    row.getCell(EXCEL_COLUMN_MAP.adSetTimeStop + 1).value = formatDateTimeForExcel(adSet.adSetTimeStop);
     
     if (adSet.adSetDailyBudget) {
       row.getCell(EXCEL_COLUMN_MAP.adSetDailyBudget + 1).value = adSet.adSetDailyBudget / 100;

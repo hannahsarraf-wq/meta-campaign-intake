@@ -259,6 +259,16 @@ export async function createMetaCampaign(
 }
 
 /**
+ * Parse a datetime-local string as EST (UTC-5) and return a Unix timestamp.
+ * Meta API requires UTC-based timestamps; users enter times in EST.
+ */
+function toEstUnixTimestamp(dateStr: string): number | undefined {
+  const withEst = dateStr.length === 16 ? `${dateStr}:00-05:00` : `${dateStr}-05:00`;
+  const d = new Date(withEst);
+  return isNaN(d.getTime()) ? undefined : Math.floor(d.getTime() / 1000);
+}
+
+/**
  * Create an ad set in Meta Ads Manager
  */
 export async function createMetaAdSet(
@@ -307,7 +317,13 @@ export async function createMetaAdSet(
     }
     if (adSet.adSetBidStrategy) {
       params.bid_strategy = mapBidStrategyToApi(adSet.adSetBidStrategy);
+    } else {
+      params.bid_strategy = "LOWEST_COST_WITHOUT_CAP";
     }
+  } else {
+    // CBO: Meta API requires bid_strategy at the ad set level even when budget
+    // is managed at the campaign level.
+    params.bid_strategy = "LOWEST_COST_WITHOUT_CAP";
   }
 
   // Minimum ROAS
@@ -315,12 +331,14 @@ export async function createMetaAdSet(
     params.roas_average_floor = adSet.minimumROAS;
   }
 
-  // Schedule
+  // Schedule — treat datetime-local strings as EST (UTC-5) to match the ad account timezone
   if (adSet.adSetTimeStart) {
-    params.start_time = adSet.adSetTimeStart;
+    const ts = toEstUnixTimestamp(adSet.adSetTimeStart);
+    if (ts) params.start_time = ts;
   }
   if (adSet.adSetTimeStop) {
-    params.end_time = adSet.adSetTimeStop;
+    const ts = toEstUnixTimestamp(adSet.adSetTimeStop);
+    if (ts) params.end_time = ts;
   }
 
   // Promoted object for conversion-based objectives
