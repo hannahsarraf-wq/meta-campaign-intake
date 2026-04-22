@@ -62,18 +62,18 @@ export const appRouter = router({
       .input(campaignBaseSchema.extend({ adSets: z.array(adSetSchema) }))
       .mutation(async ({ ctx, input }) => {
         const db = getDb(ctx.env);
-        const campaignResult = await db.insert(campaigns).values({
+        const [insertedCampaign] = await db.insert(campaigns).values({
           userId: ctx.user.id, campaignName: input.campaignName, campaignStatus: input.campaignStatus,
           specialAdCategories: input.specialAdCategories || null, specialAdCategoryCountry: input.specialAdCategoryCountry || null,
           campaignObjective: input.campaignObjective, buyingType: input.buyingType,
           campaignSpendLimit: input.campaignSpendLimit || null, campaignDailyBudget: input.campaignDailyBudget || null,
           campaignLifetimeBudget: input.campaignLifetimeBudget || null, campaignBidStrategy: input.campaignBidStrategy || null,
           budgetLevel: input.budgetLevel, isDraft: 0,
-        }).run();
-        const campaignId = Number((campaignResult as any).meta?.last_row_id);
+        }).returning({ id: campaigns.id });
+        const campaignId = insertedCampaign.id;
         const adSetIds: number[] = [];
         for (const adSet of input.adSets) {
-          const adSetResult = await db.insert(adSets).values({
+          const [insertedAdSet] = await db.insert(adSets).values({
             campaignId, adSetName: adSet.adSetName, adSetRunStatus: adSet.adSetRunStatus,
             adSetTimeStart: adSet.adSetTimeStart || null, adSetTimeStop: adSet.adSetTimeStop || null,
             adSetDailyBudget: adSet.adSetDailyBudget || null, adSetLifetimeBudget: adSet.adSetLifetimeBudget || null,
@@ -82,8 +82,8 @@ export const appRouter = router({
             billingEvent: adSet.billingEvent || null, country: adSet.country || "United States",
             geoType: adSet.geoType || "city", geoLocation: adSet.geoLocation || null,
             ageRange: adSet.ageRange || null, gender: adSet.gender || "all",
-          }).run();
-          adSetIds.push(Number((adSetResult as any).meta?.last_row_id));
+          }).returning({ id: adSets.id });
+          adSetIds.push(insertedAdSet.id);
         }
         return { campaignId, adSetIds };
       }),
@@ -119,15 +119,15 @@ export const appRouter = router({
       .input(campaignBaseSchema.extend({ adAccountId: z.string().min(1), adSets: z.array(adSetSchema) }))
       .mutation(async ({ ctx, input }) => {
         const db = getDb(ctx.env);
-        const pushCampaignResult = await db.insert(campaigns).values({
+        const [insertedPushCampaign] = await db.insert(campaigns).values({
           userId: ctx.user.id, campaignName: input.campaignName, campaignStatus: input.campaignStatus,
           specialAdCategories: input.specialAdCategories || null, specialAdCategoryCountry: input.specialAdCategoryCountry || null,
           campaignObjective: input.campaignObjective, buyingType: input.buyingType,
           campaignSpendLimit: input.campaignSpendLimit || null, campaignDailyBudget: input.campaignDailyBudget || null,
           campaignLifetimeBudget: input.campaignLifetimeBudget || null, campaignBidStrategy: input.campaignBidStrategy || null,
           budgetLevel: input.budgetLevel, isDraft: 0,
-        }).run();
-        const campaignId = Number((pushCampaignResult as any).meta?.last_row_id);
+        }).returning({ id: campaigns.id });
+        const campaignId = insertedPushCampaign.id;
         for (const adSet of input.adSets) {
           await db.insert(adSets).values({
             campaignId, adSetName: adSet.adSetName, adSetRunStatus: adSet.adSetRunStatus,
@@ -161,22 +161,22 @@ export const appRouter = router({
           campaignId = input.campaignId;
           await db.delete(adSets).where(eq(adSets.campaignId, campaignId));
         } else {
-          const draftResult = await db.insert(campaigns).values({
+          const [insertedDraft] = await db.insert(campaigns).values({
             userId: ctx.user.id, campaignName: input.campaignName, campaignStatus: input.campaignStatus || null,
             campaignObjective: input.campaignObjective || null, buyingType: input.buyingType || null,
             budgetLevel: input.budgetLevel, isDraft: 1,
-          }).run();
-          campaignId = Number((draftResult as any).meta?.last_row_id);
+          }).returning({ id: campaigns.id });
+          campaignId = insertedDraft.id;
         }
         const adSetIds: number[] = [];
         for (const adSet of input.adSets || []) {
-          const adSetResult = await db.insert(adSets).values({
+          const [insertedAdSet] = await db.insert(adSets).values({
             campaignId, adSetName: adSet.adSetName, adSetRunStatus: adSet.adSetRunStatus,
             adSetBidStrategy: adSet.adSetBidStrategy || null, optimizationGoal: adSet.optimizationGoal || null,
             billingEvent: adSet.billingEvent || null, country: adSet.country || "United States",
             geoType: adSet.geoType || "city", gender: adSet.gender || "all",
-          }).run();
-          adSetIds.push(Number((adSetResult as any).meta?.last_row_id));
+          }).returning({ id: adSets.id });
+          adSetIds.push(insertedAdSet.id);
         }
         return { campaignId, adSetIds, isDraft: true };
       }),
