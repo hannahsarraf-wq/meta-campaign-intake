@@ -285,7 +285,8 @@ export default function CampaignIntake() {
       }
 
       // ROAS validation
-      if (adSet.adSetBidStrategy.includes("Min ROAS") && !adSet.minimumROAS) {
+      const isRoasBidStrategy = adSet.adSetBidStrategy.includes("Min ROAS") || adSet.adSetBidStrategy === "ROAS goal";
+      if (isRoasBidStrategy && !adSet.minimumROAS) {
         toast.error("Minimum ROAS is required for ROAS-based bid strategies");
         return false;
       }

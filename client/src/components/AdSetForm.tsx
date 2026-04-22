@@ -296,6 +296,25 @@ export default function AdSetForm({
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Minimum ROAS - Required for ROAS-based bid strategies */}
+              {(adSet.adSetBidStrategy === "Highest Value With Min ROAS" || adSet.adSetBidStrategy === "ROAS goal") && (
+                <div className="grid gap-2 mt-4">
+                  <Label htmlFor={`minimumROAS-${adSet.id}`} className="font-medium text-sm">
+                    Minimum ROAS *
+                  </Label>
+                  <Input
+                    id={`minimumROAS-${adSet.id}`}
+                    type="number"
+                    placeholder="e.g., 2.5"
+                    value={adSet.minimumROAS || ""}
+                    onChange={(e) => onChange("minimumROAS", e.target.value)}
+                    step="0.01"
+                    min="0"
+                  />
+                  <p className="text-xs text-slate-500">Required for ROAS-based bid strategies (e.g., 2.5 means 250% return)</p>
+                </div>
+              )}
             </div>
           )}
 
