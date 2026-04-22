@@ -335,22 +335,13 @@ export default function AdSetForm({
                 </Select>
               </div>
 
+              {/* Billing Event — always Impressions */}
               <div className="grid gap-2">
-                <Label htmlFor={`billingEvent-${adSet.id}`} className="font-medium">
-                  Billing Event *
-                </Label>
-                <Select value={adSet.billingEvent} onValueChange={(value) => onChange("billingEvent", value)}>
-                  <SelectTrigger id={`billingEvent-${adSet.id}`}>
-                    <SelectValue placeholder="Select billing event" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {billingEvents.map((event) => (
-                      <SelectItem key={event} value={event}>
-                        {event}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label className="font-medium">Billing Event</Label>
+                <div className="flex h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-500 select-none">
+                  IMPRESSIONS
+                </div>
+                <p className="text-xs text-slate-500">Always set to Impressions.</p>
               </div>
             </div>
           </div>

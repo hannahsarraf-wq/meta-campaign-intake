@@ -312,23 +312,13 @@ export default function CampaignSection({
           </Select>
         </div>
 
-        {/* Buying Type */}
+        {/* Buying Type — always Auction */}
         <div className="grid gap-2">
-          <Label htmlFor="buyingType" className="font-medium">
-            Buying Type *
-          </Label>
-          <Select value={formData.buyingType} onValueChange={(value) => onChange("buyingType", value)}>
-            <SelectTrigger id="buyingType">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {buyingTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label className="font-medium">Buying Type</Label>
+          <div className="flex h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-500 select-none">
+            AUCTION
+          </div>
+          <p className="text-xs text-slate-500">Always set to Auction.</p>
         </div>
 
         {/* Special Ad Categories */}
