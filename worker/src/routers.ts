@@ -7,6 +7,58 @@ import { validateAdAccount, pushCampaignToMeta } from "./meta-api";
 import { generateExcelFile } from "./excel";
 import { buildClearCookie, COOKIE_NAME } from "./sdk";
 
+function normalizeDateTime(dt?: string | null): string | null {
+  if (!dt) return null;
+  // datetime-local inputs emit "YYYY-MM-DDTHH:MM" (16 chars) — pad to full ISO with seconds
+  return dt.length === 16 ? `${dt}:00` : dt;
+}
+
+function sanitizeAdSet(adSet: {
+  adSetName: string; adSetRunStatus: string;
+  adSetTimeStart?: string; adSetTimeStop?: string;
+  adSetDailyBudget?: number; adSetLifetimeBudget?: number;
+  adSetBidStrategy: string; minimumROAS?: number;
+  link?: string; optimizationGoal: string; billingEvent: string;
+  country?: string; geoType?: string; geoLocation?: string;
+  ageRange?: string; gender?: string;
+}) {
+  return {
+    adSetName: adSet.adSetName.trim(),
+    adSetRunStatus: adSet.adSetRunStatus,
+    adSetTimeStart: normalizeDateTime(adSet.adSetTimeStart),
+    adSetTimeStop: normalizeDateTime(adSet.adSetTimeStop),
+    adSetDailyBudget: adSet.adSetDailyBudget || null,
+    adSetLifetimeBudget: adSet.adSetLifetimeBudget || null,
+    adSetBidStrategy: adSet.adSetBidStrategy || null,
+    minimumROAS: adSet.minimumROAS || null,
+    link: adSet.link || null,
+    optimizationGoal: adSet.optimizationGoal || null,
+    billingEvent: adSet.billingEvent || null,
+    country: adSet.country || "United States",
+    geoType: adSet.geoType || "city",
+    geoLocation: adSet.geoLocation || null,
+    ageRange: adSet.ageRange || null,
+    gender: adSet.gender || "all",
+  };
+}
+
+function sanitizeDraftAdSet(adSet: {
+  adSetName: string; adSetRunStatus: string;
+  adSetBidStrategy?: string; optimizationGoal?: string; billingEvent?: string;
+  country?: string; geoType?: string; gender?: string;
+}) {
+  return {
+    adSetName: adSet.adSetName.trim(),
+    adSetRunStatus: adSet.adSetRunStatus,
+    adSetBidStrategy: adSet.adSetBidStrategy || null,
+    optimizationGoal: adSet.optimizationGoal || null,
+    billingEvent: adSet.billingEvent || null,
+    country: adSet.country || "United States",
+    geoType: adSet.geoType || "city",
+    gender: adSet.gender || "all",
+  };
+}
+
 const adSetSchema = z.object({
   adSetName: z.string().min(1).max(255),
   adSetRunStatus: z.string(),
@@ -74,14 +126,7 @@ export const appRouter = router({
         const adSetIds: number[] = [];
         for (const adSet of input.adSets) {
           const [insertedAdSet] = await db.insert(adSets).values({
-            campaignId, adSetName: adSet.adSetName, adSetRunStatus: adSet.adSetRunStatus,
-            adSetTimeStart: adSet.adSetTimeStart || null, adSetTimeStop: adSet.adSetTimeStop || null,
-            adSetDailyBudget: adSet.adSetDailyBudget || null, adSetLifetimeBudget: adSet.adSetLifetimeBudget || null,
-            adSetBidStrategy: adSet.adSetBidStrategy || null, minimumROAS: adSet.minimumROAS || null,
-            link: adSet.link || null, optimizationGoal: adSet.optimizationGoal || null,
-            billingEvent: adSet.billingEvent || null, country: adSet.country || "United States",
-            geoType: adSet.geoType || "city", geoLocation: adSet.geoLocation || null,
-            ageRange: adSet.ageRange || null, gender: adSet.gender || "all",
+            campaignId, ...sanitizeAdSet(adSet),
           }).returning({ id: adSets.id });
           adSetIds.push(insertedAdSet.id);
         }
@@ -129,16 +174,7 @@ export const appRouter = router({
         }).returning({ id: campaigns.id });
         const campaignId = insertedPushCampaign.id;
         for (const adSet of input.adSets) {
-          await db.insert(adSets).values({
-            campaignId, adSetName: adSet.adSetName, adSetRunStatus: adSet.adSetRunStatus,
-            adSetTimeStart: adSet.adSetTimeStart || null, adSetTimeStop: adSet.adSetTimeStop || null,
-            adSetDailyBudget: adSet.adSetDailyBudget || null, adSetLifetimeBudget: adSet.adSetLifetimeBudget || null,
-            adSetBidStrategy: adSet.adSetBidStrategy || null, minimumROAS: adSet.minimumROAS || null,
-            link: adSet.link || null, optimizationGoal: adSet.optimizationGoal || null,
-            billingEvent: adSet.billingEvent || null, country: adSet.country || "United States",
-            geoType: adSet.geoType || "city", geoLocation: adSet.geoLocation || null,
-            ageRange: adSet.ageRange || null, gender: adSet.gender || "all",
-          }).run();
+          await db.insert(adSets).values({ campaignId, ...sanitizeAdSet(adSet) }).run();
         }
         const metaResult = await pushCampaignToMeta(ctx.env.META_ACCESS_TOKEN, input.adAccountId, input, input.adSets);
         return { campaignId, ...metaResult };
@@ -171,10 +207,7 @@ export const appRouter = router({
         const adSetIds: number[] = [];
         for (const adSet of input.adSets || []) {
           const [insertedAdSet] = await db.insert(adSets).values({
-            campaignId, adSetName: adSet.adSetName, adSetRunStatus: adSet.adSetRunStatus,
-            adSetBidStrategy: adSet.adSetBidStrategy || null, optimizationGoal: adSet.optimizationGoal || null,
-            billingEvent: adSet.billingEvent || null, country: adSet.country || "United States",
-            geoType: adSet.geoType || "city", gender: adSet.gender || "all",
+            campaignId, ...sanitizeDraftAdSet(adSet),
           }).returning({ id: adSets.id });
           adSetIds.push(insertedAdSet.id);
         }
