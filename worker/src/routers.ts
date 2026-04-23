@@ -44,17 +44,29 @@ function sanitizeAdSet(adSet: {
 
 function sanitizeDraftAdSet(adSet: {
   adSetName: string; adSetRunStatus: string;
-  adSetBidStrategy?: string; optimizationGoal?: string; billingEvent?: string;
-  country?: string; geoType?: string; gender?: string;
+  adSetTimeStart?: string; adSetTimeStop?: string;
+  adSetDailyBudget?: number; adSetLifetimeBudget?: number;
+  adSetBidStrategy?: string; minimumROAS?: number;
+  link?: string; optimizationGoal?: string; billingEvent?: string;
+  country?: string; geoType?: string; geoLocation?: string;
+  ageRange?: string; gender?: string;
 }) {
   return {
     adSetName: adSet.adSetName.trim(),
     adSetRunStatus: adSet.adSetRunStatus,
+    adSetTimeStart: normalizeDateTime(adSet.adSetTimeStart),
+    adSetTimeStop: normalizeDateTime(adSet.adSetTimeStop),
+    adSetDailyBudget: adSet.adSetDailyBudget || null,
+    adSetLifetimeBudget: adSet.adSetLifetimeBudget || null,
     adSetBidStrategy: adSet.adSetBidStrategy || null,
+    minimumROAS: adSet.minimumROAS || null,
+    link: adSet.link || null,
     optimizationGoal: adSet.optimizationGoal || null,
     billingEvent: adSet.billingEvent || null,
     country: adSet.country || "United States",
     geoType: adSet.geoType || "city",
+    geoLocation: adSet.geoLocation || null,
+    ageRange: adSet.ageRange || null,
     gender: adSet.gender || "all",
   };
 }
@@ -156,7 +168,10 @@ export const appRouter = router({
         if (!campaign) throw new Error("Campaign not found");
         const sets = await db.select().from(adSets).where(eq(adSets.campaignId, input.campaignId));
         const buf = generateExcelFile({ ...campaign, adSets: sets });
-        const base64Data = btoa(String.fromCharCode(...buf));
+        // Avoid spread (...buf) — too many args for large files and fails on ArrayBuffer.
+        let binaryStr = '';
+        for (let i = 0; i < buf.length; i++) binaryStr += String.fromCharCode(buf[i]);
+        const base64Data = btoa(binaryStr);
         return { success: true, fileName: `${campaign.campaignName.replace(/\s+/g, "_")}_${Date.now()}.xlsx`, data: base64Data };
       }),
 
@@ -191,15 +206,23 @@ export const appRouter = router({
         const db = getDb(ctx.env);
         let campaignId: number;
         if (input.campaignId) {
-          await db.update(campaigns).set({ campaignName: input.campaignName, campaignStatus: input.campaignStatus || null,
+          await db.update(campaigns).set({
+            campaignName: input.campaignName, campaignStatus: input.campaignStatus || null,
+            specialAdCategories: input.specialAdCategories || null, specialAdCategoryCountry: input.specialAdCategoryCountry || null,
             campaignObjective: input.campaignObjective || null, buyingType: input.buyingType || null,
-            budgetLevel: input.budgetLevel, updatedAt: new Date().toISOString() }).where(eq(campaigns.id, input.campaignId));
+            campaignSpendLimit: input.campaignSpendLimit || null, campaignDailyBudget: input.campaignDailyBudget || null,
+            campaignLifetimeBudget: input.campaignLifetimeBudget || null, campaignBidStrategy: input.campaignBidStrategy || null,
+            budgetLevel: input.budgetLevel, updatedAt: new Date().toISOString(),
+          }).where(eq(campaigns.id, input.campaignId));
           campaignId = input.campaignId;
           await db.delete(adSets).where(eq(adSets.campaignId, campaignId));
         } else {
           const [insertedDraft] = await db.insert(campaigns).values({
             userId: ctx.user.id, campaignName: input.campaignName, campaignStatus: input.campaignStatus || null,
+            specialAdCategories: input.specialAdCategories || null, specialAdCategoryCountry: input.specialAdCategoryCountry || null,
             campaignObjective: input.campaignObjective || null, buyingType: input.buyingType || null,
+            campaignSpendLimit: input.campaignSpendLimit || null, campaignDailyBudget: input.campaignDailyBudget || null,
+            campaignLifetimeBudget: input.campaignLifetimeBudget || null, campaignBidStrategy: input.campaignBidStrategy || null,
             budgetLevel: input.budgetLevel, isDraft: 1,
           }).returning({ id: campaigns.id });
           campaignId = insertedDraft.id;

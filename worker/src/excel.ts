@@ -75,5 +75,10 @@ export function generateExcelFile(campaignData: Campaign & { adSets: AdSet[] }):
     rowIndex++;
   }
 
-  return XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+  // XLSX.write with type:"array" returns ArrayBuffer in CF Workers, Uint8Array in Node/browser.
+  // ArrayBuffer has no Symbol.iterator, so normalize to Uint8Array before returning.
+  const raw = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+  if (raw instanceof Uint8Array) return raw;
+  if (raw instanceof ArrayBuffer) return new Uint8Array(raw);
+  return new Uint8Array(raw as number[]);
 }

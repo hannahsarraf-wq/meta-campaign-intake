@@ -3,7 +3,10 @@ const META_API_BASE = `https://graph.facebook.com/${META_API_VERSION}`;
 
 interface MetaApiResponse {
   id?: string;
-  error?: { message: string; type: string; code: number };
+  error?: {
+    message: string; type: string; code: number;
+    error_subcode?: number; error_user_msg?: string; error_user_title?: string;
+  };
 }
 
 function mapObjective(o: string) {
@@ -70,7 +73,12 @@ async function metaPost(accessToken: string, endpoint: string, params: Record<st
     body: body.toString(),
   });
   const data = await res.json() as MetaApiResponse;
-  if (data.error) throw new Error(`Meta API Error: ${data.error.message} (code: ${data.error.code})`);
+  if (data.error) {
+    const e = data.error;
+    const detail = [e.error_user_title, e.error_user_msg, e.error_subcode ? `subcode: ${e.error_subcode}` : ""]
+      .filter(Boolean).join(" | ");
+    throw new Error(`Meta API Error: ${e.message} (code: ${e.code})${detail ? ` — ${detail}` : ""}`);
+  }
   return data;
 }
 
@@ -155,7 +163,8 @@ export async function pushCampaignToMeta(
     }
     if (!adSetParams.daily_budget && !adSetParams.lifetime_budget) adSetParams.daily_budget = 100;
     if (adSet.minimumROAS) adSetParams.roas_average_floor = adSet.minimumROAS;
-    // Treat datetime-local strings as EST (UTC-5) to match the ad account timezone
+    // adSet.link is the destination URL — it belongs in the ad creative, not promoted_object.
+    // promoted_object requires pixel_id/page_id; sending { url } causes code 100.
     if (adSet.adSetTimeStart) {
       const ts = toEstUnixTimestamp(adSet.adSetTimeStart);
       if (ts) adSetParams.start_time = ts;
@@ -164,8 +173,6 @@ export async function pushCampaignToMeta(
       const ts = toEstUnixTimestamp(adSet.adSetTimeStop);
       if (ts) adSetParams.end_time = ts;
     }
-    if (adSet.link) adSetParams.promoted_object = { url: adSet.link };
-
     const { id } = await metaPost(accessToken, `/${accountId}/adsets`, adSetParams);
     if (id) metaAdSetIds.push(id);
   }
