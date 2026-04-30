@@ -140,7 +140,7 @@ export async function generateExcelFile(campaignData: Campaign & { adSets: AdSet
     
     row.getCell(EXCEL_COLUMN_MAP.adSetBidStrategy + 1).value = adSet.adSetBidStrategy;
     
-    if (adSet.minimumROAS) {
+    if (adSet.minimumROAS && adSet.adSetBidStrategy?.includes("ROAS")) {
       row.getCell(EXCEL_COLUMN_MAP.minimumROAS + 1).value = adSet.minimumROAS / 100;
     }
     

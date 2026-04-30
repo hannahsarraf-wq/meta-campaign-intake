@@ -83,7 +83,7 @@ export function generateExcelFile(campaignData: Campaign & { adSets: AdSet[] }):
     if (adSet.adSetDailyBudget) setCell(COL.adSetDailyBudget, adSet.adSetDailyBudget / 100);
     if (adSet.adSetLifetimeBudget) setCell(COL.adSetLifetimeBudget, adSet.adSetLifetimeBudget / 100);
     setCell(COL.adSetBidStrategy, adSet.adSetBidStrategy);
-    if (adSet.minimumROAS) setCell(COL.minimumROAS, adSet.minimumROAS / 100);
+    if (adSet.minimumROAS && adSet.adSetBidStrategy?.includes("ROAS")) setCell(COL.minimumROAS, adSet.minimumROAS / 100);
     setCell(COL.link, adSet.link);
     setCell(COL.optimizationGoal, adSet.optimizationGoal);
     setCell(COL.billingEvent, adSet.billingEvent);
