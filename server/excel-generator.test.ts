@@ -27,8 +27,13 @@ describe("Excel Column Mapping", () => {
     expect(EXCEL_COLUMN_MAP.adSetBidStrategy).toBe(22); // W
     expect(EXCEL_COLUMN_MAP.minimumROAS).toBe(23); // X
     expect(EXCEL_COLUMN_MAP.link).toBe(26); // AA
-    expect(EXCEL_COLUMN_MAP.optimizationGoal).toBe(42); // AQ
-    expect(EXCEL_COLUMN_MAP.billingEvent).toBe(43); // AR
+    expect(EXCEL_COLUMN_MAP.optimizationGoal).toBe(41); // AP
+    expect(EXCEL_COLUMN_MAP.billingEvent).toBe(42); // AQ
+    expect(EXCEL_COLUMN_MAP.geoCountries).toBe(29); // AD
+    expect(EXCEL_COLUMN_MAP.geoCities).toBe(30); // AE
+    expect(EXCEL_COLUMN_MAP.geoRegions).toBe(31); // AF
+    expect(EXCEL_COLUMN_MAP.geoAddresses).toBe(32); // AG
+    expect(EXCEL_COLUMN_MAP.geoZip).toBe(33); // AH
   });
 
   it("should not have gaps in critical column mappings", () => {

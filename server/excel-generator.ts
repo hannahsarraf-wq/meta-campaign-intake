@@ -148,10 +148,17 @@ export async function generateExcelFile(campaignData: Campaign & { adSets: AdSet
     row.getCell(EXCEL_COLUMN_MAP.optimizationGoal + 1).value = adSet.optimizationGoal;
     row.getCell(EXCEL_COLUMN_MAP.billingEvent + 1).value = adSet.billingEvent;
     
-    // Format geo location with country prefix
+    // Write geo location to the correct column based on geo type
     if (adSet.geoLocation) {
       const formattedGeo = formatGeoWithCountry(adSet.geoType, adSet.geoLocation, adSet.country);
-      row.getCell(EXCEL_COLUMN_MAP.geoLocation + 1).value = formattedGeo;
+      const geoColMap: Record<string, number> = {
+        zip: EXCEL_COLUMN_MAP.geoZip + 1,
+        city: EXCEL_COLUMN_MAP.geoCities + 1,
+        region: EXCEL_COLUMN_MAP.geoRegions + 1,
+        address: EXCEL_COLUMN_MAP.geoAddresses + 1,
+      };
+      const geoCol = geoColMap[adSet.geoType] ?? (EXCEL_COLUMN_MAP.geoCountries + 1);
+      row.getCell(geoCol).value = formattedGeo;
     }
 
     rowIndex++;

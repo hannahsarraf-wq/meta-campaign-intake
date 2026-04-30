@@ -82,10 +82,14 @@ export const EXCEL_COLUMN_MAP = {
   adSetLifetimeBudget: 20,   // U
   adSetBidStrategy: 22,      // W
   minimumROAS: 23,           // X
+  geoCountries: 29,          // AD
+  geoCities: 30,             // AE
+  geoRegions: 31,            // AF
+  geoAddresses: 32,          // AG
+  geoZip: 33,                // AH
   link: 26,                  // AA
-  optimizationGoal: 42,      // AQ
-  billingEvent: 43,          // AR
-  geoLocation: 24,           // Y (Geo targeting location)
+  optimizationGoal: 41,      // AP
+  billingEvent: 42,          // AQ
 } as const;
 
 /**

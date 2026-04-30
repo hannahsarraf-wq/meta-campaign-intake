@@ -11,7 +11,8 @@ const COL = {
   campaignBidStrategy: 9, adSetId: 14, adSetRunStatus: 15, adSetName: 16,
   adSetTimeStart: 17, adSetTimeStop: 18, adSetDailyBudget: 19,
   adSetLifetimeBudget: 20, adSetBidStrategy: 22, minimumROAS: 23,
-  geoLocation: 24, link: 26, optimizationGoal: 42, billingEvent: 43,
+  geoCountries: 29, geoCities: 30, geoRegions: 31, geoAddresses: 32, geoZip: 33,
+  link: 26, optimizationGoal: 41, billingEvent: 42,
 };
 
 function formatGeo(geoType: string, geoLocation: string, country?: string | null): string {
@@ -86,7 +87,12 @@ export function generateExcelFile(campaignData: Campaign & { adSets: AdSet[] }):
     setCell(COL.link, adSet.link);
     setCell(COL.optimizationGoal, adSet.optimizationGoal);
     setCell(COL.billingEvent, adSet.billingEvent);
-    if (adSet.geoLocation) setCell(COL.geoLocation, formatGeo(adSet.geoType, adSet.geoLocation, adSet.country));
+    if (adSet.geoLocation) {
+      const geoColMap: Record<string, number> = {
+        zip: COL.geoZip, city: COL.geoCities, region: COL.geoRegions, address: COL.geoAddresses,
+      };
+      setCell(geoColMap[adSet.geoType] ?? COL.geoCountries, formatGeo(adSet.geoType, adSet.geoLocation, adSet.country));
+    }
 
     // Update sheet range to include new row
     const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
