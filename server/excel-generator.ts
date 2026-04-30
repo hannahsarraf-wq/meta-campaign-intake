@@ -94,8 +94,10 @@ export async function generateExcelFile(campaignData: Campaign & { adSets: AdSet
     throw new Error("Template workbook has no sheets");
   }
 
-  // Start adding data from row 4 (rows 1-3 are headers)
-  let rowIndex = 4;
+  // Delete the first 2 Meta metadata rows so row 1 = column headers, row 2 = data
+  sheet.spliceRows(1, 2);
+
+  let rowIndex = 2;
 
   // Add one row per ad set
   for (const adSet of campaignData.adSets) {

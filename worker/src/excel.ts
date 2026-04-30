@@ -35,7 +35,28 @@ export function generateExcelFile(campaignData: Campaign & { adSets: AdSet[] }):
   const workbook = XLSX.read(bytes, { type: "array" });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-  let rowIndex = 4;
+  // Delete first 2 Meta metadata rows so row 1 = column headers, row 2 = data
+  const templateRange = XLSX.utils.decode_range(sheet["!ref"] || "A1");
+  for (let r = templateRange.s.r; r <= templateRange.e.r - 2; r++) {
+    for (let c = templateRange.s.c; c <= templateRange.e.c; c++) {
+      const fromAddr = XLSX.utils.encode_cell({ r: r + 2, c });
+      const toAddr = XLSX.utils.encode_cell({ r, c });
+      if (sheet[fromAddr]) {
+        sheet[toAddr] = sheet[fromAddr];
+      } else {
+        delete sheet[toAddr];
+      }
+    }
+  }
+  for (let r = templateRange.e.r - 1; r <= templateRange.e.r; r++) {
+    for (let c = templateRange.s.c; c <= templateRange.e.c; c++) {
+      delete sheet[XLSX.utils.encode_cell({ r, c })];
+    }
+  }
+  templateRange.e.r -= 2;
+  sheet["!ref"] = XLSX.utils.encode_range(templateRange);
+
+  let rowIndex = 2;
   for (const adSet of campaignData.adSets) {
     const setCell = (col: number, val: any) => {
       if (val == null || val === "") return;
