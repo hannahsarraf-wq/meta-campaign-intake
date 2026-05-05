@@ -43,11 +43,23 @@ app.post("/api/auth/login", async (c) => {
     return c.json({ error: "Invalid request body" }, 400);
   }
 
-  if (!body.password || body.password !== c.env.APP_PASSWORD) {
+  if (!body.password) {
     return c.json({ error: "Invalid password" }, 401);
   }
 
-  const sessionToken = await createSessionToken(c.env.JWT_SECRET, c.env.VITE_APP_ID, "password-user", "User");
+  let openId: string;
+  let displayName: string;
+  if (body.password === c.env.ADMIN_PASSWORD) {
+    openId = "password-admin";
+    displayName = "Admin";
+  } else if (body.password === c.env.APP_PASSWORD) {
+    openId = "password-user";
+    displayName = "User";
+  } else {
+    return c.json({ error: "Invalid password" }, 401);
+  }
+
+  const sessionToken = await createSessionToken(c.env.JWT_SECRET, c.env.VITE_APP_ID, openId, displayName);
   const cookie = buildSessionCookie(COOKIE_NAME, sessionToken, ONE_YEAR_MS / 1000);
 
   return new Response(JSON.stringify({ success: true }), {

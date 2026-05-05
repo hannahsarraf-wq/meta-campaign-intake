@@ -8,4 +8,5 @@ export interface Env {
   META_APP_ID: string;
   FRONTEND_URL: string;
   APP_PASSWORD: string;
+  ADMIN_PASSWORD: string;
 }

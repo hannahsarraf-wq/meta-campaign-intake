@@ -31,12 +31,13 @@ export async function createContext(
       let found = await db.select().from(users).where(eq(users.openId, session.openId)).limit(1);
 
       if (!found.length) {
+        const isAdmin = session.openId === "password-admin" || session.openId === env.OWNER_OPEN_ID;
         await db.insert(users).values({
           openId: session.openId,
           name: session.name || "User",
           email: null,
           loginMethod: "password",
-          role: "user",
+          role: isAdmin ? "admin" : "user",
         }).onConflictDoNothing();
         found = await db.select().from(users).where(eq(users.openId, session.openId)).limit(1);
       }
