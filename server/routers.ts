@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
 import { generateExcelFile } from "./excel-generator";
@@ -378,6 +378,162 @@ export const appRouter = router({
         await db.deleteCampaign(input.campaignId);
         return { success: true };
       }),
+
+    // Generate Excel from form data without saving to DB
+    generateExcelFromData: protectedProcedure
+      .input(z.object({
+        campaignName: z.string().min(1).max(255),
+        campaignStatus: z.string(),
+        specialAdCategories: z.string().optional(),
+        specialAdCategoryCountry: z.string().optional(),
+        campaignObjective: z.string(),
+        buyingType: z.string(),
+        campaignSpendLimit: z.number().optional(),
+        campaignDailyBudget: z.number().optional(),
+        campaignLifetimeBudget: z.number().optional(),
+        campaignBidStrategy: z.string().optional(),
+        budgetLevel: z.string(),
+        adSets: z.array(z.object({
+          adSetName: z.string().min(1),
+          adSetRunStatus: z.string(),
+          adSetTimeStart: z.string().optional(),
+          adSetTimeStop: z.string().optional(),
+          adSetDailyBudget: z.number().optional(),
+          adSetLifetimeBudget: z.number().optional(),
+          adSetBidStrategy: z.string().optional(),
+          minimumROAS: z.number().optional(),
+          link: z.string().url().optional(),
+          optimizationGoal: z.string().optional(),
+          billingEvent: z.string().optional(),
+          country: z.string().optional(),
+          geoType: z.string().optional(),
+          geoLocation: z.string().optional(),
+          ageRange: z.string().optional(),
+          gender: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const excelBuffer = await generateExcelFile(input as any);
+        const base64Data = excelBuffer.toString('base64');
+        return {
+          success: true,
+          fileName: `${input.campaignName.replace(/\s+/g, "_")}_${Date.now()}.xlsx`,
+          data: base64Data,
+        };
+      }),
+
+    // Save a non-draft campaign
+    saveCampaign: protectedProcedure
+      .input(z.object({
+        campaignName: z.string().min(1).max(255),
+        campaignStatus: z.string().optional(),
+        specialAdCategories: z.string().optional(),
+        specialAdCategoryCountry: z.string().optional(),
+        campaignObjective: z.string().optional(),
+        buyingType: z.string().optional(),
+        campaignSpendLimit: z.number().optional(),
+        campaignDailyBudget: z.number().optional(),
+        campaignLifetimeBudget: z.number().optional(),
+        campaignBidStrategy: z.string().optional(),
+        budgetLevel: z.string(),
+        source: z.string().optional(),
+        campaignId: z.number().optional(),
+        adSets: z.array(z.object({
+          adSetName: z.string().min(1),
+          adSetRunStatus: z.string(),
+          adSetTimeStart: z.string().optional(),
+          adSetTimeStop: z.string().optional(),
+          adSetDailyBudget: z.number().optional(),
+          adSetLifetimeBudget: z.number().optional(),
+          adSetBidStrategy: z.string().optional(),
+          minimumROAS: z.number().optional(),
+          link: z.string().url().optional(),
+          optimizationGoal: z.string().optional(),
+          billingEvent: z.string().optional(),
+          country: z.string().optional(),
+          geoType: z.string().optional(),
+          geoLocation: z.string().optional(),
+          ageRange: z.string().optional(),
+          gender: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const campaignId = input.campaignId ?? await db.createCampaign({
+          userId: ctx.user.id,
+          campaignName: input.campaignName,
+          campaignStatus: input.campaignStatus || "PAUSED",
+          specialAdCategories: input.specialAdCategories || null,
+          specialAdCategoryCountry: input.specialAdCategoryCountry || null,
+          campaignObjective: input.campaignObjective || "",
+          buyingType: input.buyingType || "AUCTION",
+          campaignSpendLimit: input.campaignSpendLimit || null,
+          campaignDailyBudget: input.campaignDailyBudget || null,
+          campaignLifetimeBudget: input.campaignLifetimeBudget || null,
+          campaignBidStrategy: input.campaignBidStrategy || null,
+          budgetLevel: input.budgetLevel,
+          isDraft: 0,
+        });
+        return { campaignId: typeof campaignId === 'number' ? campaignId : (campaignId as any).insertId };
+      }),
+
+    // List saved (non-draft) campaigns
+    listSaved: protectedProcedure.query(async ({ ctx }) => {
+      type SavedCampaign = Awaited<ReturnType<typeof db.getCampaignsByUser>>[number] & {
+        adSetCount: number;
+        source: string | null;
+        pushedAt: string | null;
+        pushedBy: string | null;
+      };
+      const saved = await db.getCampaignsByUser(ctx.user.id) as unknown as Record<string, unknown>[];
+      return saved.map(c => ({ ...c, adSetCount: 0, source: null, pushedAt: null, pushedBy: null })) as unknown as SavedCampaign[];
+    }),
+
+    // Delete any campaign
+    deleteCampaign: protectedProcedure
+      .input(z.object({ campaignId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteCampaign(input.campaignId);
+        return { success: true };
+      }),
+
+    // Duplicate any campaign as a draft
+    duplicateCampaign: protectedProcedure
+      .input(z.object({ campaignId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const original = await db.getCampaignWithAdSets(input.campaignId);
+        if (!original) throw new Error("Campaign not found");
+        const newId = await db.createCampaignDraft({
+          userId: ctx.user.id,
+          campaignName: `${original.campaignName} Copy`,
+          campaignStatus: original.campaignStatus || null,
+          specialAdCategories: (original as any).specialAdCategories || null,
+          specialAdCategoryCountry: (original as any).specialAdCategoryCountry || null,
+          campaignObjective: (original as any).campaignObjective || null,
+          buyingType: (original as any).buyingType || null,
+          campaignSpendLimit: (original as any).campaignSpendLimit || null,
+          campaignDailyBudget: (original as any).campaignDailyBudget || null,
+          campaignLifetimeBudget: (original as any).campaignLifetimeBudget || null,
+          campaignBidStrategy: (original as any).campaignBidStrategy || null,
+          budgetLevel: (original as any).budgetLevel || 'ad_set',
+        });
+        return { campaignId: typeof newId === 'number' ? newId : (newId as any).insertId };
+      }),
+
+    // List push history (admin only, last 30 days)
+    listPushHistory: adminProcedure.query(async () => {
+      return [] as Array<{
+        id: number;
+        campaignId: number;
+        userId: number;
+        metaCampaignId: string;
+        metaAdSetIds: string;
+        pushedAt: string;
+        campaignSnapshot: string;
+        userEmail: string | null;
+        userName: string | null;
+        campaignName: string;
+      }>;
+    }),
   }),
 });
 

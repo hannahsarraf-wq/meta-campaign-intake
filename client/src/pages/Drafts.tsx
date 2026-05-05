@@ -10,6 +10,7 @@ export default function Drafts() {
   const [, setLocation] = useLocation();
   const listDraftsQuery = trpc.campaigns.listDrafts.useQuery();
   const deleteDraftMutation = trpc.campaigns.deleteDraft.useMutation();
+  const duplicateMutation = trpc.campaigns.duplicateCampaign.useMutation();
   const utils = trpc.useUtils();
 
   const handleLoadDraft = async (draftId: number) => {
@@ -24,6 +25,16 @@ export default function Drafts() {
     } catch (error) {
       toast.error("Failed to load draft");
       console.error(error);
+    }
+  };
+
+  const handleDuplicateDraft = async (draftId: number) => {
+    try {
+      await duplicateMutation.mutateAsync({ campaignId: draftId });
+      await listDraftsQuery.refetch();
+      toast.success("Draft duplicated");
+    } catch {
+      toast.error("Failed to duplicate draft");
     }
   };
 
@@ -86,8 +97,17 @@ export default function Drafts() {
                         onClick={() => handleLoadDraft(draft.id)}
                         className="gap-2"
                       >
-                        <Copy className="w-4 h-4" />
                         Load
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDuplicateDraft(draft.id)}
+                        disabled={duplicateMutation.isPending}
+                        className="gap-2"
+                      >
+                        <Copy className="w-4 h-4" />
+                        Duplicate
                       </Button>
                       <Button
                         size="sm"

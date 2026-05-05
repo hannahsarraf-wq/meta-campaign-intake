@@ -25,8 +25,24 @@ CREATE TABLE IF NOT EXISTS campaigns (
   campaignBidStrategy TEXT,
   budgetLevel TEXT NOT NULL DEFAULT 'ad_set',
   isDraft INTEGER NOT NULL DEFAULT 0,
+  source TEXT NOT NULL DEFAULT 'manual',
+  pushedAt TEXT,
+  pushedBy TEXT,
   createdAt TEXT NOT NULL DEFAULT (datetime('now')),
   updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS push_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaignId INTEGER NOT NULL REFERENCES campaigns(id),
+  userId INTEGER NOT NULL REFERENCES users(id),
+  metaCampaignId TEXT NOT NULL,
+  metaAdSetIds TEXT NOT NULL,
+  pushedAt TEXT NOT NULL DEFAULT (datetime('now')),
+  campaignSnapshot TEXT NOT NULL,
+  userEmail TEXT,
+  userName TEXT,
+  campaignName TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS adSets (

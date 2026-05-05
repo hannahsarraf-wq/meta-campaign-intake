@@ -28,6 +28,9 @@ export const campaigns = sqliteTable("campaigns", {
   campaignBidStrategy: text("campaignBidStrategy"),
   budgetLevel: text("budgetLevel").notNull().default("ad_set"),
   isDraft: integer("isDraft").notNull().default(0),
+  source: text("source").notNull().default("manual"),
+  pushedAt: text("pushedAt"),
+  pushedBy: text("pushedBy"),
   createdAt: text("createdAt").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updatedAt").notNull().default(sql`(datetime('now'))`),
 });
@@ -57,6 +60,20 @@ export const adSets = sqliteTable("adSets", {
   updatedAt: text("updatedAt").notNull().default(sql`(datetime('now'))`),
 });
 
+export const pushHistory = sqliteTable("push_history", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  campaignId: integer("campaignId").notNull().references(() => campaigns.id),
+  userId: integer("userId").notNull().references(() => users.id),
+  metaCampaignId: text("metaCampaignId").notNull(),
+  metaAdSetIds: text("metaAdSetIds").notNull(),
+  pushedAt: text("pushedAt").notNull().default(sql`(datetime('now'))`),
+  campaignSnapshot: text("campaignSnapshot").notNull(),
+  userEmail: text("userEmail"),
+  userName: text("userName"),
+  campaignName: text("campaignName").notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type Campaign = typeof campaigns.$inferSelect;
 export type AdSet = typeof adSets.$inferSelect;
+export type PushHistory = typeof pushHistory.$inferSelect;
