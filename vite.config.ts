@@ -181,8 +181,9 @@ export default defineConfig({
     ],
     proxy: {
       "/api": {
-        target: "http://localhost:8787",
+        target: "https://meta-campaign-worker.hannah-sarraf.workers.dev",
         changeOrigin: true,
+        secure: true,
       },
     },
     fs: {
